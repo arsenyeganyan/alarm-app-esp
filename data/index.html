@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Budelnik</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Budelnik</h1>
+
+    <div id="current-time">--:--:--</div>
+
+    <input type="time" id="alarm-time" />
+    <button onclick="setAlarm()">Set Alarm</button>
+
+    <p id="alarm-message" onclick="stopAlarm()">Alarm ringing! Press the message to stop.</p>
+    <p id="error-message" onclick="stopAlarm()">No file selected for the alarm.</p>
+
+    <div class="audio-upload">
+      <h2>🎵 Choose MP3 File for The Alarm Sound</h2>
+      <input type="file" id="audio-file" accept=".mp3,audio/mpeg" />
+    </div>
+
+    <div class="set-alarms">
+      <h2>⏱️ Set Alarms</h2>
+      <ul id="alarm-list"></ul>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
