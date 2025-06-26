@@ -52,7 +52,6 @@ void socketBegin() {
             file = root.openNextFile();
         }
 
-        // Send response
         server.send(200, "text/plain", output);
     });
 
@@ -69,8 +68,8 @@ void socketBegin() {
     });
 
     // JS
-    server.on("/script.js", HTTP_GET, []() {
-        File file = SPIFFS.open("/script.js", "r");
+    server.on("/client.js", HTTP_GET, []() {
+        File file = SPIFFS.open("/client.js", "r");
         if (!file) {
             server.send(404, "text/plain", "File Not Found!");
             return;

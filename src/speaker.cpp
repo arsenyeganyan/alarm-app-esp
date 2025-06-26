@@ -30,17 +30,27 @@ void stopAudio() {
 }
 
 void playAudio(const String& path) {
-  stopAudio();
+  stopAudio();  // cleanup old instances
+
+  if (!SPIFFS.exists(path)) {
+    Serial.println("❌ MP3 file not found in SPIFFS.");
+    return;
+  }
 
   file = new AudioFileSourceSPIFFS(path.c_str());
   out = new AudioOutputI2S();
-  out->SetPinout(26, 25, 27);
+  out->SetPinout(26, 25, 27); 
   out->begin();
   out->SetGain(0.5);
 
   mp3 = new AudioGeneratorMP3();
-  mp3->begin(file, out);
-
-  isPlaying = true;
-  Serial.printf("MP3 begin: %s\n", mp3->isRunning() ? "yes" : "no");
+  if (mp3->begin(file, out)) {
+    isPlaying = true;
+    Serial.println("✅ MP3 begin: yes");
+  } else {
+    Serial.println("❌ MP3 begin: failed");
+    isPlaying = false;
+    shouldLoopAudio = false;
+    stopAudio(); 
+  }
 }

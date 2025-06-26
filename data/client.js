@@ -9,14 +9,36 @@ socket.addEventListener('message', (event) => {
   try {
     const data = event.data;
 
+    if (data.type === "request_time") {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const MM = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+
+      const datetime = `${yyyy}-${MM}-${dd} ${hh}:${mm}:${ss}`;
+      console.log("Date: ", datetime);
+      
+      socket.send(JSON.stringify({
+        type: "set_time",
+        datetime
+      }));
+
+      console.log("🕒 Sent current time to ESP32:", datetime);
+    }
+
     // ESP says to ring the alarm
-    if (data === "ring_alarm") {
+    else if (data === "send_sound") {
       console.log("Alarm triggered by ESP32");
 
       alarmMessage.style.display = 'block';
+      
       sendMp3ToESP();
     }
 
+    //renders all the available alarms in html
     else if (data.startsWith("{")) {
       const json = JSON.parse(data);
       if (json.alarms) {
@@ -59,6 +81,8 @@ const errorMessage = document.getElementById('error-message');
 errorMessage.style.display = 'none';
 
 function sendMp3ToESP() {
+  console.log('entered sending mp3');
+  
   const file = audioInput.files[0];
   if (!file || file.type !== 'audio/mpeg') {
     console.error('No valid MP3 file selected');
@@ -75,7 +99,9 @@ function sendMp3ToESP() {
   }
 
   let offset = 0;
-  socket.send('START_MP3');
+  socket.send(JSON.stringify({
+    type: 'START_MP3',
+  }));
 
   const reader = new FileReader();
 
@@ -87,8 +113,14 @@ function sendMp3ToESP() {
 
       readNextChunk();
     } else {
-      socket.send('END_MP3');
+      socket.send(JSON.stringify({
+        type: 'END_MP3',
+      }));
       console.log('Finished sending file.');
+
+      socket.send(JSON.stringify({
+        type: "ring_sound",
+      }));
     }
   };
 
@@ -102,12 +134,12 @@ function sendMp3ToESP() {
 
 let alarmAudio = new Audio();
 
-function getCurrentTimeHHMM() {
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  return `${hours}:${minutes}`;
-}
+// function getCurrentTimeHHMM() {
+//   const now = new Date();
+//   const hours = String(now.getHours()).padStart(2, '0');
+//   const minutes = String(now.getMinutes()).padStart(2, '0');
+//   return `${hours}:${minutes}`;
+// }
 
 audioInput.addEventListener('change', () => {
   const file = audioInput.files[0];
@@ -123,7 +155,7 @@ function updateTime() {
   const timeString = now.toLocaleTimeString();
   currentTimeDisplay.textContent = timeString;
 
-  const currentHHMM = getCurrentTimeHHMM();
+  // const currentHHMM = getCurrentTimeHHMM();
 
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify({
@@ -144,18 +176,12 @@ function stopAlarm() {
 
   let alarmStore = JSON.parse(localStorage.getItem('store'));
 
-  const currentHHMM = getCurrentTimeHHMM();
-
-  for(i in alarmStore) {
-    const alarm = alarmStore[i];
-    if (alarm.alarmTime === currentHHMM) {
-      alarm.alarmSet = false;
-      break;
-    }
-  }
+  // const currentHHMM = getCurrentTimeHHMM();
 
   //communicate with the ESP
-  socket.send('STOP_MP3');
+  socket.send(JSON.stringify({
+    type: "stop_alarm",
+  }));
 
   renderAlarmList();
 }
