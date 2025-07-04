@@ -2,6 +2,8 @@
 #include <WebServer.h>
 #include <vector>
 #include <ArduinoJson.h>
+#include "FS.h"
+#include "SPIFFS.h"
 
 #include "./modulesAndUtils/speaker.h"
 #include "modulesAndUtils/rtcTime.h"
@@ -15,14 +17,17 @@ std::vector<Alarm> alarmList;
 
 File mp3File;
 bool receivingMp3 = false;
+bool waitingForMp3 = false;
+unsigned long mp3RequestTime = 0;
+const unsigned long mp3Timeout = 5000;
 
 WebServer server(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
 
 String extractHourMinute(const String& timeStr) {
-  int timeStart = timeStr.indexOf(' ') + 1;  // Skips "Monday,"
-  timeStart = timeStr.indexOf(' ', timeStart) + 1;  // Skips date
-  return timeStr.substring(timeStart, timeStart + 5);  // "13:00"
+  int timeStart = timeStr.indexOf(' ') + 1;
+  timeStart = timeStr.indexOf(' ', timeStart) + 1;
+  return timeStr.substring(timeStart, timeStart + 5);
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length) {
@@ -36,35 +41,21 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
     }
 
     String messageType = doc["type"];
+    Serial.println(messageType);
 
-    if (messageType == "set_time") {
-      String dt = doc["datetime"];
-
-      int year   = dt.substring(0, 4).toInt();
-      int month  = dt.substring(5, 7).toInt();
-      int day    = dt.substring(8, 10).toInt();
-      int hour   = dt.substring(11, 13).toInt();
-      int minute = dt.substring(14, 16).toInt();
-      int second = dt.substring(17, 19).toInt();
-
-      if (year > 2000 && month > 0 && day > 0) {
-        rtc.adjust(DateTime(year, month, day, hour, minute, second));
-        Serial.println("✅ RTC synced from browser.");
-      } else {
-        Serial.println("❌ Invalid datetime from client.");
-      }
-    }
-    else if (messageType == "set_alarm") {
+    if (messageType == "set_alarm") {
       String time = doc["time"];
       alarmList.push_back({ time, true });
       Serial.println("Alarm set for " + time);
     }
+
     else if (messageType == "remove_alarm") {
       String time = doc["time"];
       alarmList.erase(std::remove_if(alarmList.begin(), alarmList.end(),
         [&](Alarm a) { return a.time == time; }), alarmList.end());
       Serial.println("Removed alarm for " + time);
     }
+
     else if (messageType == "toggle_alarm") {
       String time = doc["time"];
       bool enabled = doc["enabled"];
@@ -74,6 +65,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
         }
       }
     }
+
     else if (messageType == "get_alarms") {
       StaticJsonDocument<512> out;
       JsonArray arr = out.createNestedArray("alarms");
@@ -88,40 +80,37 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
       serializeJson(out, response);
       webSocket.sendTXT(num, response);
     }
+
     else if (messageType == "check_alarm") {
-      RtcData* currentTime = new RtcData(rtcReading());
-      String currentHHMM = extractHourMinute(currentTime->time);
+     RtcData currentTime = rtcReading();
+      String currentHHMM = extractHourMinute(currentTime.time);
 
       Serial.println("Current HH:MM: " + currentHHMM);
 
       for (Alarm &alarm : alarmList) {
-        Serial.println("Comparing with alarm time: " + alarm.time);
         if (alarm.enabled && alarm.time == currentHHMM) {
           Serial.println("Triggering alarm for time: " + currentHHMM);
           alarm.enabled = false;
-          
-          if (SPIFFS.exists("/uploaded.mp3")) {
-            Serial.println("Alarm audio already exists on the server.");
-            shouldLoopAudio = true;
-            playAudio("/uploaded.mp3");
-          } else {
-            Serial.println("Getting new mp3 file...");
-            webSocket.sendTXT(num, "send_sound");
-          }
 
+          waitingForMp3 = true;
+          mp3RequestTime = millis();
+          webSocket.sendTXT(num, "send_sound");
           break;
         }
       }
     }
-    else if(messageType == "ring_sound") {
+
+    else if (messageType == "ring_sound") {
       Serial.println("ring (server)");
       shouldLoopAudio = true;
       playAudio("/uploaded.mp3");
     }
-    else if(messageType == "stop_alarm") {
+
+    else if (messageType == "stop_alarm") {
       shouldLoopAudio = false;
       stopAudio();
     }
+
     else if (messageType == "START_MP3") {
       if (SPIFFS.exists("/uploaded.mp3")) {
         SPIFFS.remove("/uploaded.mp3");
@@ -136,14 +125,64 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
       receivingMp3 = true;
       Serial.println("Start receiving MP3...");
     }
+
     else if (messageType == "END_MP3") {
       if (mp3File) {
         mp3File.close();
       }
+
       receivingMp3 = false;
-      Serial.println("MP3 file received and saved.");
+      waitingForMp3 = false;
+
+      Serial.println("MP3 file received and saved. Playing...");
+      shouldLoopAudio = true;
+      playAudio("/uploaded.mp3");
+    }
+
+    else if (messageType == "no_sound_available") {
+      waitingForMp3 = false;
+      Serial.println("\u26A0\uFE0F No sound available from client.");
+    }
+    else if(messageType == "send_time") {
+      struct tm timeinfo;
+      if (getLocalTime(&timeinfo)) {
+        StaticJsonDocument<256> out;
+
+        out["type"] = "updated_time";
+        char timeString[30];
+
+        strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S", &timeinfo);
+        out["time"] = timeString;
+
+        String response;
+        serializeJson(out, response);
+        webSocket.sendTXT(num, response);
+      } else {
+        webSocket.sendTXT(num, "{\"type\":\"error\",\"msg\":\"Failed to sync time\"}");
+      }
+    }
+
+    else if (messageType == "config_timezone") {
+      int timezoneOffset = doc["offset"];
+      updateTimezoneOffset(timezoneOffset);
+
+      struct tm timeinfo;
+      if (getLocalTime(&timeinfo)) {
+        StaticJsonDocument<256> out;
+        out["type"] = "configured_time";
+
+        time_t now = mktime(&timeinfo);
+        out["epoch"] = now;
+
+        String response;
+        serializeJson(out, response);
+        webSocket.sendTXT(num, response);
+      } else {
+        webSocket.sendTXT(num, "{\"type\":\"error\",\"msg\":\"Failed to sync time\"}");
+      }
     }
   }
+
   else if (type == WStype_BIN) {
     if (receivingMp3 && mp3File) {
       mp3File.write(payload, length);

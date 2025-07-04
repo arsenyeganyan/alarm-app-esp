@@ -11,7 +11,9 @@ struct RtcData {
 
 extern RTC_DS3231 rtc;
 
-void setRTCFromInput(const String&);
+void setRTCFromTm(struct tm t);
+void setRTCFromSystemTime();
+void updateTimezoneOffset(int newOffset);
 RtcData rtcReading();
 void rtcSetup();
 

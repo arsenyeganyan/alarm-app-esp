@@ -15,24 +15,7 @@ const char* password = WIFI_PASSWORD;
 void socketBegin() {
     pinMode(LED, OUTPUT);
 
-    Serial.println("Connecting to Wi-Fi...");
-    WiFi.begin(ssid, password);
-
-    unsigned long startAttemptTime = millis();
-    const unsigned long wifiTimeout = 10000; // 10 seconds timeout
-
-    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < wifiTimeout) {
-        delay(500);
-        Serial.print(".");
-    }
-
-    if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("\nWi-Fi connection failed!");
-        return;
-    }
-
-    Serial.println("\nConnected to Wi-Fi.");
-    Serial.print("IP Address: ");
+    Serial.print("IP to connect to client: ");
     Serial.println(WiFi.localIP());
 
     Serial.println("Mounting SPIFFS...");
@@ -74,9 +57,27 @@ void socketBegin() {
             server.send(404, "text/plain", "File Not Found!");
             return;
         }
-        server.streamFile(file, "text/javascript");
+        server.streamFile(file, "application/javascript");
         file.close();
     });
+    server.on("/utils/timeFunctions.js", HTTP_GET, []() {
+        File file = SPIFFS.open("/utils/timeFunctions.js", "r");
+        if (!file) {
+            server.send(404, "text/plain", "File Not Found!");
+            return;
+        }
+        server.streamFile(file, "application/javascript");
+        file.close();
+    });
+    server.on("/utils/sendMp3ToESP.js", HTTP_GET, []() {
+        File file = SPIFFS.open("/utils/sendMp3ToESP.js", "r");
+        if (!file) {
+            server.send(404, "text/plain", "File Not Found!");
+            return;
+        }
+        server.streamFile(file, "application/javascript");
+        file.close();
+    }); 
 
     // CSS
     server.on("/style.css", HTTP_GET, []() {

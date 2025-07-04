@@ -10,10 +10,55 @@
   <div class="container">
     <h1>Budelnik</h1>
 
-    <div id="current-time">--:--:--</div>
+    <div class="timezone-config">
+      <label for="timezone">Select Time Zone:</label>
+      <select id="timezone" name="timezone">
+        <option value="-43200">UTC−12:00 — Baker Island</option>
+        <option value="-39600">UTC−11:00 — American Samoa, Niue</option>
+        <option value="-36000">UTC−10:00 — Hawaii, Tahiti</option>
+        <option value="-34200">UTC−09:30 — Marquesas Islands</option>
+        <option value="-32400">UTC−09:00 — Alaska</option>
+        <option value="-28800">UTC−08:00 — Pacific Time (US, Canada)</option>
+        <option value="-25200">UTC−07:00 — Mountain Time (US, Canada)</option>
+        <option value="-21600">UTC−06:00 — Central Time (US, Canada), Mexico City</option>
+        <option value="-18000">UTC−05:00 — Eastern Time (US, Canada), Bogotá</option>
+        <option value="-14400">UTC−04:00 — Atlantic Time, Caracas</option>
+        <option value="-12600">UTC−03:30 — Newfoundland</option>
+        <option value="-10800">UTC−03:00 — Buenos Aires, São Paulo</option>
+        <option value="-7200">UTC−02:00 — South Georgia Island</option>
+        <option value="-3600">UTC−01:00 — Azores, Cape Verde</option>
+        <option value="0">UTC±00:00 — London, Greenwich, Accra</option>
+        <option value="3600">UTC+01:00 — Central Europe, Lagos, Tunis</option>
+        <option value="7200">UTC+02:00 — Eastern Europe, Cairo, Cape Town</option>
+        <option value="10800">UTC+03:00 — Moscow, Riyadh, Nairobi</option>
+        <option value="12600">UTC+03:30 — Tehran</option>
+        <option value="14400">UTC+04:00 — Armenia, UAE, Baku</option>
+        <option value="16200">UTC+04:30 — Kabul</option>
+        <option value="18000">UTC+05:00 — Pakistan, Uzbekistan</option>
+        <option value="19800">UTC+05:30 — India, Sri Lanka</option>
+        <option value="20700">UTC+05:45 — Nepal</option>
+        <option value="21600">UTC+06:00 — Bangladesh, Kazakhstan</option>
+        <option value="23400">UTC+06:30 — Myanmar</option>
+        <option value="25200">UTC+07:00 — Thailand, Vietnam</option>
+        <option value="28800">UTC+08:00 — China, Singapore, Perth</option>
+        <option value="31500">UTC+08:45 — Eucla (Australia)</option>
+        <option value="32400">UTC+09:00 — Japan, Korea</option>
+        <option value="34200">UTC+09:30 — Central Australia (Adelaide)</option>
+        <option value="36000">UTC+10:00 — Eastern Australia, Guam</option>
+        <option value="37800">UTC+10:30 — Lord Howe Island</option>
+        <option value="39600">UTC+11:00 — Solomon Islands, Vladivostok</option>
+        <option value="43200">UTC+12:00 — New Zealand, Fiji</option>
+        <option value="45900">UTC+12:45 — Chatham Islands</option>
+        <option value="46800">UTC+13:00 — Tonga, Phoenix Islands</option>
+        <option value="50400">UTC+14:00 — Line Islands (Kiribati)</option>
+      </select>
+      <button id="set-btn" onclick="timezoneConfig()">Configure Timezone</button>
+    </div>
+
+    <div id="current-time">Waiting for time config...</div>
 
     <input type="time" id="alarm-time" />
-    <button onclick="setAlarm()">Set Alarm</button>
+    <button id="set-btn" onclick="setAlarm()">Set Alarm</button>
 
     <p id="alarm-message" onclick="stopAlarm()">Alarm ringing! Press the message to stop.</p>
     <p id="error-message" onclick="stopAlarm()">No file selected for the alarm.</p>
@@ -29,6 +74,6 @@
     </div>
   </div>
 
-  <script src="client.js"></script>
+  <script type="module" src="client.js"></script>
 </body>
 </html>

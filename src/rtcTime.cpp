@@ -1,5 +1,7 @@
 #include "rtc.h"
 #include "RTClib.h"
+#include <time.h>
+#include <sys/time.h>
 
 RTC_DS3231 rtc;
 
@@ -10,26 +12,57 @@ struct RtcData {
   float temperature;
 };
 
-void setRTCFromInput(const String& input) {
-  if (input.length() < 19) {
-    Serial.println("Error: Time string too short.");
+void setRTCFromTm(struct tm t) {
+  if (t.tm_year < 100 || t.tm_mon < 0 || t.tm_mon > 11 || t.tm_mday < 1 || t.tm_mday > 31) {
+    Serial.println("❌ Invalid tm values passed to setRTCFromTm");
     return;
   }
 
-  int year   = input.substring(0, 4).toInt();
-  int month  = input.substring(5, 7).toInt();
-  int day    = input.substring(8, 10).toInt();
-  int hour   = input.substring(11, 13).toInt();
-  int minute = input.substring(14, 16).toInt();
-  int second = input.substring(17, 19).toInt();
+  rtc.adjust(DateTime(
+    t.tm_year + 1900,
+    t.tm_mon + 1,
+    t.tm_mday,
+    t.tm_hour,
+    t.tm_min,
+    t.tm_sec
+  ));
 
-  if (year > 2000 && month > 0 && day > 0 && hour >= 0 && minute >= 0 && second >= 0) {
-    rtc.adjust(DateTime(year, month, day, hour, minute, second));
-    Serial.println("✅ RTC time set successfully!");
-  } else {
-    Serial.println("❌ Invalid format or value.");
-  }
+  Serial.println("✅ RTC set from system local time!");
 }
+
+void setRTCFromSystemTime() {
+  struct tm timeinfo;
+  memset(&timeinfo, 0, sizeof(struct tm));
+
+  if (!getLocalTime(&timeinfo)) {
+    Serial.println("❌ Failed to obtain local time");
+    return;
+  }
+
+  if (timeinfo.tm_year < 100) {
+    Serial.println("❌ Invalid time received");
+    return;
+  }
+
+  setRTCFromTm(timeinfo);
+}
+
+void updateTimezoneOffset(int newOffset) {
+  Serial.printf("🕒 Updating timezone offset to %d seconds\n", newOffset);
+
+  configTime(newOffset, 0, "pool.ntp.org");
+
+  struct tm timeinfo;
+  Serial.print("⌛ Waiting for time re-sync");
+  while (!getLocalTime(&timeinfo)) {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println("\n🔁 Time re-synced with new offset");
+
+  setRTCFromTm(timeinfo);
+}
+
 
 RtcData rtcReading () {
   DateTime now = rtc.now();
@@ -61,6 +94,7 @@ void rtcSetup () {
   if (rtc.lostPower()) {
     Serial.println("⚠️ RTC lost power. Please send current time in format:");
     Serial.println("YYYY-MM-DD HH:MM:SS");
+    setRTCFromSystemTime();
   } else {
     Serial.println("✅ RTC is running. Current time:");
     RtcData now = rtcReading();
