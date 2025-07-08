@@ -49,6 +49,33 @@ void socketBegin() {
         server.streamFile(file, "text/html");
         file.close();
     });
+    server.on("/worldclock.html", HTTP_GET, []() {
+        File file = SPIFFS.open("/worldclock.html", "r");
+        if (!file) {
+            server.send(404, "text/plain", "File Not Found!");
+            return;
+        }
+        server.streamFile(file, "text/html");
+        file.close();
+    });
+    server.on("/stopwatch.html", HTTP_GET, []() {
+        File file = SPIFFS.open("/stopwatch.html", "r");
+        if (!file) {
+            server.send(404, "text/plain", "File Not Found!");
+            return;
+        }
+        server.streamFile(file, "text/html");
+        file.close();
+    });
+    server.on("/timer.html", HTTP_GET, []() {
+        File file = SPIFFS.open("/timer.html", "r");
+        if (!file) {
+            server.send(404, "text/plain", "File Not Found!");
+            return;
+        }
+        server.streamFile(file, "text/html");
+        file.close();
+    });
 
     // JS
     server.on("/client.js", HTTP_GET, []() {

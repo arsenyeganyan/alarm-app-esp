@@ -13,6 +13,16 @@ export const socket = new WebSocket('ws://' + location.hostname + ':81/');
 
 document.addEventListener('DOMContentLoaded' , (e) => {
 
+  function openPopup() {
+    const popup = document.querySelector(".container");
+    popup.style.display = "block";
+  }
+
+  function closePopup() {
+    const popup = document.querySelector(".container");
+    popup.style.display = "none";
+  }
+
   const alarmMessage = document.getElementById('alarm-message');
   
   window.toggleAlarm = toggleAlarm;
@@ -20,6 +30,8 @@ document.addEventListener('DOMContentLoaded' , (e) => {
   window.setAlarm = setAlarm;
   window.stopAlarm = stopAlarm;
   window.timezoneConfig = timezoneConfig;
+  window.openPopup = openPopup;
+  window.closePopup = closePopup;
   
   let currentEpoch = null;
   let timerInterval = null;

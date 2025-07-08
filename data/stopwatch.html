@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="top-bar">
+    <div><strong>Stopwatch</strong></div>
+</div>
+
+<div class="center-stopwatch">
+    <div id="display">00:00:00</div>
+  <div class="buttons">
+    <button id="start">▶️ Start</button>
+    <button id="stop">⏸️ Stop</button>
+    <button id="reset">🔁 Reset</button>
+</div>
+
+</div>
+
+<div class="bottom-menu">
+    <a href="/" class="menu-item">Alarm</a>
+    <a href="worldclock.html" class="menu-item">World Clock</a>
+    <a href="stopwatch.html" class="menu-item active">Stopwatch</a>
+    <a href="timer.html" class="menu-item">Timer</a>
+</div>
+
+<script>
+let startTime = 0;
+let running = false;
+let interval;
+
+const startBtn = document.getElementById('start');
+const stopBtn = document.getElementById('stop');
+const resetBtn = document.getElementById('reset');
+
+function updateDisplay() {
+    const elapsed = Date.now() - startTime;
+    const totalSeconds = Math.floor(elapsed / 1000);
+
+    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+    const seconds = String(totalSeconds % 60).padStart(2, '0');
+
+    document.getElementById('display').textContent = `${hours}:${minutes}:${seconds}`;
+}
+
+function clearButtonColors() {
+    startBtn.classList.remove('active-start');
+    stopBtn.classList.remove('active-stop');
+    resetBtn.classList.remove('active-reset');
+}
+
+startBtn.onclick = function() {
+    if (!running) {
+        startTime = Date.now() - (startTime ? Date.now() - startTime : 0);
+        interval = setInterval(updateDisplay, 1000);
+        running = true;
+    }
+    clearButtonColors();
+    startBtn.classList.add('active-start');
+};
+
+stopBtn.onclick = function() {
+    if (running) {
+        clearInterval(interval);
+        running = false;
+    }
+    clearButtonColors();
+    stopBtn.classList.add('active-stop');
+};
+
+resetBtn.onclick = function() {
+    clearInterval(interval);
+    running = false;
+    startTime = 0;
+    document.getElementById('display').textContent = '00:00:00';
+    clearButtonColors();
+    resetBtn.classList.add('active-reset');
+};
+</script>
+
+</body>
+</html>

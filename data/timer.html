@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Timer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="top-bar">
+  <div><strong>Timer</strong></div>
+</div>
+
+<div class="center-timer">
+  <div class="input-group">
+    <input type="number" id="hours" min="0" max="23" placeholder="HH" />
+    <span>:</span>
+    <input type="number" id="minutes" min="0" max="59" placeholder="MM" />
+    <span>:</span>
+    <input type="number" id="seconds" min="0" max="59" placeholder="SS" />
+  </div>
+
+  <div id="countdown-display">00:00:00</div>
+
+  <div class="buttons">
+    <button id="startTimer">Start</button>
+    <button id="stopTimer">Stop</button>
+    <button id="resetTimer">Reset</button>
+  </div>
+</div>
+
+<div class="bottom-menu">
+  <a href="/" class="menu-item">Alarm</a>
+  <a href="worldclock.html" class="menu-item">World Clock</a>
+  <a href="stopwatch.html" class="menu-item">Stopwatch</a>
+  <a href="timer.html" class="menu-item active">Timer</a>
+</div>
+
+<script>
+  let countdown;
+  let remainingTime = 0;
+  let running = false;
+
+  const display = document.getElementById("countdown-display");
+  const startBtn = document.getElementById("startTimer");
+  const stopBtn = document.getElementById("stopTimer");
+  const resetBtn = document.getElementById("resetTimer");
+
+  const hoursInput = document.getElementById("hours");
+  const minutesInput = document.getElementById("minutes");
+  const secondsInput = document.getElementById("seconds");
+
+  function formatTime(totalSeconds) {
+    const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    const mins = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+    const secs = String(totalSeconds % 60).padStart(2, '0');
+    return `${hrs}:${mins}:${secs}`;
+  }
+
+  function updateDisplay() {
+    display.textContent = formatTime(remainingTime);
+  }
+
+  function clearButtonColors() {
+    startBtn.classList.remove('active-button');
+    stopBtn.classList.remove('active-button');
+    resetBtn.classList.remove('active-button');
+  }
+
+  function startCountdown() {
+    if (running) return;
+    const hrs = parseInt(hoursInput.value) || 0;
+    const mins = parseInt(minutesInput.value) || 0;
+    const secs = parseInt(secondsInput.value) || 0;
+    remainingTime = hrs * 3600 + mins * 60 + secs;
+
+    if (remainingTime <= 0) return;
+
+    updateDisplay();
+    running = true;
+
+    clearButtonColors();
+    startBtn.classList.add('active-button');
+
+    countdown = setInterval(() => {
+      remainingTime--;
+      updateDisplay();
+      if (remainingTime <= 0) {
+        clearInterval(countdown);
+        running = false;
+        alert("Time's up!");
+      }
+    }, 1000);
+  }
+
+  function stopCountdown() {
+    clearInterval(countdown);
+    running = false;
+    clearButtonColors();
+    stopBtn.classList.add('active-button');
+  }
+
+  function resetCountdown() {
+    clearInterval(countdown);
+    running = false;
+    remainingTime = 0;
+    updateDisplay();
+    hoursInput.value = '';
+    minutesInput.value = '';
+    secondsInput.value = '';
+    clearButtonColors();
+    resetBtn.classList.add('active-button');
+  }
+
+  startBtn.onclick = startCountdown;
+  stopBtn.onclick = stopCountdown;
+  resetBtn.onclick = resetCountdown;
+</script>
+
+</body>
+</html>

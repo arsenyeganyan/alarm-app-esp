@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Budelnik</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alarm</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
+
+<div class="top-bar">
+    <div><strong>Alarm</strong></div>
+    <div class="icon" onclick="openPopup()">+</div>
+</div>
+<!--  -->
+<div class="container">
     <h1>Budelnik</h1>
 
     <div class="timezone-config">
@@ -58,11 +64,11 @@
     <div id="current-time">Waiting for time config...</div>
 
     <input type="time" id="alarm-time" />
-    <button id="set-btn" onclick="setAlarm()">Set Alarm</button>
+    <button onclick="setAlarm()">Set Alarm</button>
 
     <p id="alarm-message" onclick="stopAlarm()">Alarm ringing! Press the message to stop.</p>
     <p id="error-message" onclick="stopAlarm()">No file selected for the alarm.</p>
-
+    
     <div class="audio-upload">
       <h2>🎵 Choose MP3 File for The Alarm Sound</h2>
       <input type="file" id="audio-file" accept=".mp3,audio/mpeg" />
@@ -73,7 +79,18 @@
       <ul id="alarm-list"></ul>
     </div>
   </div>
+  <!--  -->
+<div class="center-message">
+    No alarms
+</div>
 
+<div class="bottom-menu">
+    <a href="/" class="menu-item active">Alarm</a>
+    <a href="worldclock.html" class="menu-item">World Clock</a>
+    <a href="stopwatch.html" class="menu-item">Stopwatch</a>
+    <a href="timer.html" class="menu-item">Timer</a>
+</div>
   <script type="module" src="client.js"></script>
+
 </body>
 </html>

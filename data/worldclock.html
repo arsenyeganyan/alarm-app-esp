@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Clock</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="top-bar">
+    <div></div>
+    <div class="icon">+</div>
+</div>
+
+<div class="center-time">
+    <div class="big-time" id="current-time">12:48:59</div>
+    <div class="time-zone">Armenia Standard Time</div>
+</div>
+
+<div class="clock-list">
+    <div class="clock-item">
+        <div>
+            <div class="city">London</div>
+            <div class="info">3 hours behind</div>
+        </div>
+        <div class="time">09:48</div>
+    </div>
+
+    <div class="clock-item">
+        <div>
+            <div class="city">Yerevan</div>
+            <div class="info">Local time zone</div>
+        </div>
+        <div class="time">12:48</div>
+    </div>
+</div>
+<div class="div"></div>
+<div class="div"></div>
+<div class="div"></div>
+<div class="div"></div>
+<div class="bottom-menu">
+    <a href="/" class="menu-item">Alarm</a>
+    <a href="worldclock.html" class="menu-item active">World Clock</a>
+    <a href="stopwatch.html" class="menu-item">Stopwatch</a>
+    <a href="timer.html" class="menu-item">Timer</a>
+    
+</div>
+
+<script>
+    function updateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-GB', {hour12: false});
+        document.getElementById('current-time').textContent = timeString;
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+</script>
+
+</body>
+</html>
